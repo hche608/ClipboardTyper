@@ -5,23 +5,28 @@ import Foundation
 // MARK: - Typing Engine Tests
 
 final class TypingEngineTests: XCTestCase {
-    func testPerformNilTextDoesNotCrash() {
+    /// Creates a TypingEngine with notifications disabled (avoids UNUserNotificationCenter crash in test runner).
+    private func makeEngine() -> TypingEngine {
         let engine = TypingEngine()
+        engine.notify = { _, _ in }  // no-op
+        return engine
+    }
+
+    func testPerformNilTextDoesNotCrash() {
+        let engine = makeEngine()
         let config = AppConfig.defaultConfig
-        // Should not crash; just returns after sending "clipboard empty" notification
         engine.perform(config: config, text: nil)
     }
 
     func testPerformEmptyTextDoesNotCrash() {
-        let engine = TypingEngine()
+        let engine = makeEngine()
         let config = AppConfig.defaultConfig
         engine.perform(config: config, text: "")
     }
 
     func testReentryGuardPreventsConccurrentExecution() {
-        let engine = TypingEngine()
+        let engine = makeEngine()
         var config = AppConfig.defaultConfig
-        // Use minimal delays
         config.interKeyDelay = 1000
         config.interChunkDelay = 1000
         config.batchSize = 50
@@ -30,7 +35,6 @@ final class TypingEngineTests: XCTestCase {
         let expectation = XCTestExpectation(description: "First perform completes")
         let configCopy = config
 
-        // Start a typing operation on background thread
         let workItem = DispatchWorkItem {
             engine.perform(config: configCopy, text: "hello world")
             expectation.fulfill()

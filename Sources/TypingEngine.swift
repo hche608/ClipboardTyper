@@ -30,6 +30,10 @@ class TypingEngine {
     private var isRunning = false
     private let lock = NSLock()
     
+    /// Notification callback — injectable for testing.
+    /// Defaults to the real sendNotification function; tests can replace with a no-op.
+    var notify: (_ title: String, _ body: String) -> Void = sendNotification
+    
     /// Performs typing of the given text using the in-memory config.
     /// `text` should be read from NSPasteboard on the main thread before dispatching here.
     func perform(config: AppConfig, text: String?) {
@@ -37,7 +41,7 @@ class TypingEngine {
         guard !isRunning else {
             lock.unlock()
             Logger.typing.warning("Typing already in progress, ignoring hotkey trigger")
-            sendNotification(title: L10n.appName, body: L10n.alreadyTyping)
+            notify(L10n.appName, L10n.alreadyTyping)
             return
         }
         isRunning = true
@@ -45,13 +49,13 @@ class TypingEngine {
         defer { lock.withLock { isRunning = false } }
         guard let text = text, !text.isEmpty else {
             Logger.typing.notice("Clipboard empty, nothing to type")
-            sendNotification(title: L10n.appName, body: L10n.clipboardEmpty)
+            notify(L10n.appName, L10n.clipboardEmpty)
             return
         }
         
         let charTotal = text.count
         Logger.typing.notice("Starting typing: \(charTotal) chars, batch=\(config.batchSize), chunk=\(config.chunkSize)")
-        sendNotification(title: L10n.appName, body: L10n.typingStarted(charTotal))
+        notify(L10n.appName, L10n.typingStarted(charTotal))
         
         // Wait for hotkey modifier keys to be physically released.
         // Without this, the first few characters get Ctrl/Option applied.
@@ -109,10 +113,10 @@ class TypingEngine {
         
         if skippedCount > 0 {
             Logger.typing.notice("Typing complete: \(charCount) chars, \(skippedCount) skipped")
-            sendNotification(title: L10n.appName, body: L10n.typingDoneWithSkipped(charCount, skippedCount))
+            notify(L10n.appName, L10n.typingDoneWithSkipped(charCount, skippedCount))
         } else {
             Logger.typing.notice("Typing complete: \(charCount) chars")
-            sendNotification(title: L10n.appName, body: L10n.typingDone(charCount))
+            notify(L10n.appName, L10n.typingDone(charCount))
         }
     }
     
