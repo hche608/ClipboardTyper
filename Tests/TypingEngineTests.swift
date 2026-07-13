@@ -1,6 +1,6 @@
 import XCTest
 import Foundation
-@testable import ClipboardTyper
+@preconcurrency @testable import ClipboardTyper
 
 // MARK: - Typing Engine Tests
 
@@ -28,18 +28,20 @@ final class TypingEngineTests: XCTestCase {
         config.chunkSize = 1000
 
         let expectation = XCTestExpectation(description: "First perform completes")
+        let configCopy = config
 
         // Start a typing operation on background thread
-        DispatchQueue.global().async {
-            engine.perform(config: config, text: "hello world")
+        let workItem = DispatchWorkItem {
+            engine.perform(config: configCopy, text: "hello world")
             expectation.fulfill()
         }
+        DispatchQueue.global().async(execute: workItem)
 
         // Give it a moment to acquire the lock
         usleep(50_000)
 
         // This second call should be rejected by the re-entry guard (not crash or deadlock)
-        engine.perform(config: config, text: "second call")
+        engine.perform(config: configCopy, text: "second call")
 
         wait(for: [expectation], timeout: 10.0)
     }

@@ -1,5 +1,7 @@
 # ClipboardTyper
 
+[![CI](https://github.com/hche608/ClipboardTyper/actions/workflows/ci.yml/badge.svg)](https://github.com/hche608/ClipboardTyper/actions/workflows/ci.yml)
+
 Type clipboard content as physical keystrokes on macOS — works over RDP where paste is disabled.
 
 ## What it does
