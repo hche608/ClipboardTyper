@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Build (release)
+        run: swift build -c release
+
+      - name: Run tests
+        run: swift test
+
+      - name: Package .app bundle
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipboardTyper.app
+          path: dist/ClipboardTyper.app
+          if-no-files-found: error
+
+  release:
+    name: Create Release
+    needs: build-and-test
+    runs-on: macos-15
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Build release
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          zip -r ../ClipboardTyper.zip ClipboardTyper.app
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ClipboardTyper.zip
+          generate_release_notes: true
