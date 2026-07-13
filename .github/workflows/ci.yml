@@ -33,11 +33,14 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
+      - name: Create ZIP (preserving macOS metadata)
+        run: ditto -c -k --keepParent dist/ClipboardTyper.app ClipboardTyper.zip
+
       - name: Upload .app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ClipboardTyper.app
-          path: dist/ClipboardTyper.app
+          name: ClipboardTyper
+          path: ClipboardTyper.zip
           if-no-files-found: error
 
   release:
@@ -56,10 +59,8 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
-      - name: Create ZIP
-        run: |
-          cd dist
-          zip -r ../ClipboardTyper.zip ClipboardTyper.app
+      - name: Create ZIP (preserving macOS metadata)
+        run: ditto -c -k --keepParent dist/ClipboardTyper.app ClipboardTyper.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
