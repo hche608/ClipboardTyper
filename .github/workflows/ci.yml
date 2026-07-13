@@ -19,6 +19,9 @@ jobs:
       - name: Show Swift version
         run: swift --version
 
+      - name: Clean build cache
+        run: swift package clean
+
       - name: Build (release)
         run: swift build -c release
 

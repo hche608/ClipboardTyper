@@ -32,7 +32,9 @@ class TypingEngine {
     
     /// Notification callback — injectable for testing.
     /// Defaults to the real sendNotification function; tests can replace with a no-op.
-    var notify: (_ title: String, _ body: String) -> Void = sendNotification
+    var notify: (_ title: String, _ body: String) -> Void = { title, body in
+        sendNotification(title: title, body: body)
+    }
     
     /// Performs typing of the given text using the in-memory config.
     /// `text` should be read from NSPasteboard on the main thread before dispatching here.
