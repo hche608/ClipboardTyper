@@ -41,6 +41,15 @@ cp AppIcon.png "${APP_BUNDLE}/Contents/Resources/AppIcon.png"
 # PkgInfo (standard macOS app marker — tells Finder this is an application)
 echo -n "APPL????" > "${APP_BUNDLE}/Contents/PkgInfo"
 
+# --- Code Sign ---
+# Ad-hoc signing (codesign -s -) gives the bundle a stable code identity.
+# Without this, macOS treats the binary as a new app after every rebuild,
+# invalidating Accessibility permission and prompting the user each launch.
+# The entitlements file grants com.apple.security.automation.apple-events
+# which is required for NSAppleScript → System Events key injection.
+echo "🔏 Code signing (ad-hoc)..."
+codesign --force --sign - --entitlements ClipboardTyper.entitlements --deep "${APP_BUNDLE}"
+
 echo "✅ Built: ${APP_BUNDLE}"
 
 # --- Optional: Install to /Applications ---
