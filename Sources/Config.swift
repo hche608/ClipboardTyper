@@ -44,14 +44,50 @@ struct AppConfig: Codable, HotKeyDisplayable {
     var interChunkDelay: UInt32
     var chunkSize: Int
     var batchSize: Int
+    // Extra delay when shift state changes between batches.
+    // RDP needs time to process shift up/down transitions; without this,
+    // fast alternation (e.g. "aAbBcC") produces wrong characters.
+    var shiftToggleDelay: UInt32
     
     static let defaultConfig = AppConfig(
         keyCode: 9, control: true, option: true, shift: false, command: false,
         interKeyDelay: 5000,
         interChunkDelay: 10000,
         chunkSize: 100,
-        batchSize: 10
+        batchSize: 10,
+        shiftToggleDelay: 30000
     )
+    
+    // Custom decoder: provides defaults for fields added in later versions,
+    // so existing config files without shiftToggleDelay don't fail to parse.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        keyCode = try c.decode(UInt32.self, forKey: .keyCode)
+        control = try c.decode(Bool.self, forKey: .control)
+        option = try c.decode(Bool.self, forKey: .option)
+        shift = try c.decode(Bool.self, forKey: .shift)
+        command = try c.decode(Bool.self, forKey: .command)
+        interKeyDelay = try c.decode(UInt32.self, forKey: .interKeyDelay)
+        interChunkDelay = try c.decode(UInt32.self, forKey: .interChunkDelay)
+        chunkSize = try c.decode(Int.self, forKey: .chunkSize)
+        batchSize = try c.decode(Int.self, forKey: .batchSize)
+        shiftToggleDelay = try c.decodeIfPresent(UInt32.self, forKey: .shiftToggleDelay) ?? Self.defaultConfig.shiftToggleDelay
+    }
+    
+    init(keyCode: UInt32, control: Bool, option: Bool, shift: Bool, command: Bool,
+         interKeyDelay: UInt32, interChunkDelay: UInt32, chunkSize: Int, batchSize: Int,
+         shiftToggleDelay: UInt32) {
+        self.keyCode = keyCode
+        self.control = control
+        self.option = option
+        self.shift = shift
+        self.command = command
+        self.interKeyDelay = interKeyDelay
+        self.interChunkDelay = interChunkDelay
+        self.chunkSize = chunkSize
+        self.batchSize = batchSize
+        self.shiftToggleDelay = shiftToggleDelay
+    }
     
     // Carbon API requires modifiers as a bitmask. This converts our booleans
     // into the format expected by RegisterEventHotKey.

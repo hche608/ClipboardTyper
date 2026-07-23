@@ -84,6 +84,9 @@ class TypingEngine {
                     // Flush when shift state changes — can't mix shifted/unshifted in one batch
                     if batchShift != nil && batchShift != shift {
                         flush(shift: batchShift!, delay: config.interKeyDelay)
+                        // Extra delay for shift state transition — RDP needs time to
+                        // process shift up/down before the next batch arrives.
+                        usleep(config.shiftToggleDelay)
                     }
                     batchShift = shift
                     batch.append((keyCode, shift))

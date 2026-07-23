@@ -23,12 +23,13 @@ class SpeedSettingsWindow: ManagedWindow {
         let interChunkDelay: UInt32
         let chunkSize: Int
         let batchSize: Int
+        let shiftToggleDelay: UInt32
     }
     
     static let presets: [Preset] = [
-        Preset(name: "fast", interKeyDelay: 2000, interChunkDelay: 5000, chunkSize: 200, batchSize: 15),
-        Preset(name: "balanced", interKeyDelay: 5000, interChunkDelay: 10000, chunkSize: 100, batchSize: 10),
-        Preset(name: "safe", interKeyDelay: 20000, interChunkDelay: 50000, chunkSize: 50, batchSize: 5),
+        Preset(name: "fast", interKeyDelay: 2000, interChunkDelay: 5000, chunkSize: 200, batchSize: 15, shiftToggleDelay: 15000),
+        Preset(name: "balanced", interKeyDelay: 5000, interChunkDelay: 10000, chunkSize: 100, batchSize: 10, shiftToggleDelay: 30000),
+        Preset(name: "safe", interKeyDelay: 20000, interChunkDelay: 50000, chunkSize: 50, batchSize: 5, shiftToggleDelay: 50000),
     ]
     
     static func presetDisplayName(_ name: String) -> String {
@@ -181,6 +182,8 @@ class SpeedSettingsWindow: ManagedWindow {
         interChunkDelaySlider.doubleValue = Double(preset.interChunkDelay) / 1000.0
         chunkSizeSlider.doubleValue = Double(preset.chunkSize)
         batchSizeSlider.doubleValue = Double(preset.batchSize)
+        // shiftToggleDelay has no slider yet — store directly on config
+        config.shiftToggleDelay = preset.shiftToggleDelay
         updateAllValueLabels()
         updateEstimate()
     }
@@ -200,6 +203,7 @@ class SpeedSettingsWindow: ManagedWindow {
         interChunkDelaySlider.doubleValue = Double(d.interChunkDelay) / 1000.0
         chunkSizeSlider.doubleValue = Double(d.chunkSize)
         batchSizeSlider.doubleValue = Double(d.batchSize)
+        config.shiftToggleDelay = d.shiftToggleDelay
         updateAllValueLabels()
         updateEstimate()
     }

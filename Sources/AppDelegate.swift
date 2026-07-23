@@ -76,6 +76,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotKeyID.signature = OSType(0x4354_4B59)  // "CTKY" — arbitrary unique 4-char code
         hotKeyID.id = 1
         
+        Logger.hotkey.debug("Registering hotkey: keyCode=\(self.currentConfig.keyCode), carbonMods=0x\(String(self.currentConfig.carbonModifiers, radix: 16)), display=\(self.currentConfig.displayString)")
+        
         let status = RegisterEventHotKey(
             currentConfig.keyCode,
             currentConfig.carbonModifiers,
@@ -91,7 +93,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        Logger.hotkey.notice("Hotkey registered: \(self.currentConfig.displayString)")
+        Logger.hotkey.notice("Hotkey registered successfully: \(self.currentConfig.displayString)")
         
         // The event handler only needs to be installed once — it persists across
         // hotkey re-registrations. Multiple installs would create duplicate handlers.
@@ -301,7 +303,7 @@ func hotKeyHandler(nextHandler: EventHandlerCallRef?, event: EventRef?, userData
     // Read clipboard on main thread — NSPasteboard is not documented as thread-safe.
     // Also avoids timing issues where clipboard changes between trigger and read.
     let clipboard = NSPasteboard.general.string(forType: .string)
-    Logger.hotkey.debug("Hotkey triggered, dispatching typing engine")
+    Logger.hotkey.debug("Hotkey triggered, clipboard has \(clipboard?.count ?? 0) chars, dispatching typing engine")
     DispatchQueue.global(qos: .userInitiated).async {
         engine.perform(config: config, text: clipboard)
     }
